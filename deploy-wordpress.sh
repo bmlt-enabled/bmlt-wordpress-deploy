@@ -65,6 +65,9 @@ elif [ "$PLUGINVERSION" != "$READMEVERSION" ]; then
 elif [ "$PLUGINVERSION" = "" ] || [ "$READMEVERSION" = "" ]; then
     echo "Version in readme.txt or $MAINFILE is empty. Exiting...."
     exit 1;
+elif [ "$PLUGINVERSION" != "$VERSION" ] || [ "$READMEVERSION" != "$VERSION" ]; then
+    echo "Version in readme.txt or $MAINFILE does not match pushed tag. Exiting...."
+    exit 1;
 elif [ "$PLUGINVERSION" = "$READMEVERSION" ]; then
     echo "Versions match in readme.txt and $MAINFILE. Let's continue..."
 fi
