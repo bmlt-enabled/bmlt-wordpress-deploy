@@ -1,13 +1,16 @@
 #!/bin/bash
 
-# if travis isnt calling the script we abort
 if [[ -z "$TRAVIS" ]]; then
-    echo "Script is only to be run by Travis CI" 1>&2
+    SCRIPT_TAG=$TRAVIS_TAG
+elif [[ -z "$GITHUB_WORKFLOW" ]]; then
+    SCRIPT_TAG=$GITHUB_REF
+else
+    echo "Script is only to be run by Travis CI or GitHub Actions" 1>&2
     exit 1
 fi
 
 # if tag contains beta we abort
-if [[ "$TRAVIS_TAG" == *"beta"* ]]; then
+if [[ "$SCRIPT_TAG" == *"beta"* ]]; then
     echo "Tag contains beta, aborting deployment" 1>&2
     exit 0
 fi
@@ -20,7 +23,7 @@ fi
 
 PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 PLUGIN_BUILDS_PATH="$PROJECT_ROOT/build-wp"
-VERSION="$TRAVIS_TAG"
+VERSION="$SCRIPT_TAG"
 
 mkdir -p $PLUGIN_BUILDS_PATH/$PLUGIN
 
@@ -118,7 +121,7 @@ svn stat svn | grep '^!' | awk '{print $2}' | xargs -I x svn rm --force x@
 svn stat svn
 
 # this is so we can test a deploy without the final svn commit, if theres a hyphen in tag but doesn't contain beta in it we will get here.
-if [[ "$TRAVIS_TAG" == *"-"* ]]; then
+if [[ "$SCRIPT_TAG" == *"-"* ]]; then
     echo "Tag contains hyphen, aborting deployment" 1>&2
     exit 0
 fi
