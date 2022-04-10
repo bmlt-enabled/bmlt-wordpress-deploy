@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [[ -z "$TRAVIS" ]]; then
+if [[ -n "$TRAVIS" ]]; then
     SCRIPT_TAG=$TRAVIS_TAG
-elif [[ -z "$GITHUB_WORKFLOW" ]]; then
+elif [[ -n "$GITHUB_WORKFLOW" ]]; then
     SCRIPT_TAG=$GITHUB_REF
 else
     echo "Script is only to be run by Travis CI or GitHub Actions" 1>&2
