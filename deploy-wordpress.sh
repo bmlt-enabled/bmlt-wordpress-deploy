@@ -52,7 +52,15 @@ unzip -q -o "$GITHUB_RELEASE_FILENAME"
 
 rm "$GITHUB_RELEASE_FILENAME"
 
+echo "testing"
+
 cd ../
+
+pwd
+
+ls -lt
+
+echo "testing"
 
 # Check version in readme.txt is the same as plugin file after translating both to Unix line breaks to work around grep's failure to identify Mac line breaks
 PLUGINVERSION=$(grep -i "Version:" $PLUGIN/$MAINFILE | awk -F' ' '{print $NF}' | tr -d '\r')
