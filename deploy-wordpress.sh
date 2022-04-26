@@ -54,6 +54,8 @@ rm "$GITHUB_RELEASE_FILENAME"
 
 echo "testing"
 
+ls -lt
+
 cd ../
 
 pwd
