@@ -26,11 +26,11 @@ PLUGIN_BUILDS_PATH="$PROJECT_ROOT/build-wp"
 VERSION="$SCRIPT_TAG"
 
 mkdir -p $PLUGIN_BUILDS_PATH/$PLUGIN
-
+ls -lt
 cp $DIST_DIR_GITHUB/$GITHUB_RELEASE_FILENAME $PLUGIN_BUILDS_PATH/$PLUGIN/$GITHUB_RELEASE_FILENAME
-
+ls -lt
 cd "$PLUGIN_BUILDS_PATH/$PLUGIN"
-
+ls -lt
 # Ensure the zip file for the current version has been built
 if [ ! -f "$GITHUB_RELEASE_FILENAME" ]; then
     echo "Built zip file $GITHUB_RELEASE_FILENAME does not exist" 1>&2
