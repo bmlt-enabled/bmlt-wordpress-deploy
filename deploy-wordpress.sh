@@ -47,9 +47,10 @@ if [ $error == 0 ]; then
 fi
 
 # Unzip the built plugin
-
-unzip -q -o "$GITHUB_RELEASE_FILENAME"
-
+pwd
+unzip -o "$GITHUB_RELEASE_FILENAME"
+pwd
+ls -lt
 rm "$GITHUB_RELEASE_FILENAME"
 
 echo "testing"
