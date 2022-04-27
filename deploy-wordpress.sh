@@ -3,11 +3,15 @@
 if [[ -n "$TRAVIS" ]]; then
     SCRIPT_TAG=$TRAVIS_TAG
 elif [[ -n "$GITHUB_WORKFLOW" ]]; then
-    SCRIPT_TAG=$GITHUB_REF
+    SCRIPT_TAG=${GITHUB_REF##*/}
 else
     echo "Script is only to be run by Travis CI or GitHub Actions" 1>&2
     exit 1
 fi
+
+echo "tag"
+
+echo "$SCRIPT_TAG"
 
 # if tag contains beta we abort
 if [[ "$SCRIPT_TAG" == *"beta"* ]]; then
@@ -126,8 +130,8 @@ if [[ "$SCRIPT_TAG" == *"-"* ]]; then
     exit 0
 fi
 
-# Commit to SVN
-svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn -m "Deploy version $VERSION"
-
-# Remove SVN temp dir
-rm -fR svn
+## Commit to SVN
+#svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn -m "Deploy version $VERSION"
+#
+## Remove SVN temp dir
+#rm -fR svn
