@@ -3,11 +3,13 @@
 if [[ -n "$TRAVIS" ]]; then
     SCRIPT_TAG=$TRAVIS_TAG
 elif [[ -n "$GITHUB_WORKFLOW" ]]; then
-    SCRIPT_TAG=$GITHUB_REF
+    SCRIPT_TAG=${GITHUB_REF##*/}
 else
     echo "Script is only to be run by Travis CI or GitHub Actions" 1>&2
     exit 1
 fi
+echo "tag"
+echo "$SCRIPT_TAG"
 
 # if tag contains beta we abort
 if [[ "$SCRIPT_TAG" == *"beta"* ]]; then
@@ -26,8 +28,6 @@ PLUGIN_BUILDS_PATH="$PROJECT_ROOT/build-wp"
 VERSION="$SCRIPT_TAG"
 
 mkdir -p $PLUGIN_BUILDS_PATH/$PLUGIN
-pwd
-ls -lt
 
 cp $DIST_DIR_GITHUB/$GITHUB_RELEASE_FILENAME $PLUGIN_BUILDS_PATH/$PLUGIN/$GITHUB_RELEASE_FILENAME
 
