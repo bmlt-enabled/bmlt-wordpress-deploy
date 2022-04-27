@@ -9,10 +9,6 @@ else
     exit 1
 fi
 
-echo "tag"
-
-echo "$SCRIPT_TAG"
-
 # if tag contains beta we abort
 if [[ "$SCRIPT_TAG" == *"beta"* ]]; then
     echo "Tag contains beta, aborting deployment" 1>&2
@@ -130,8 +126,8 @@ if [[ "$SCRIPT_TAG" == *"-"* ]]; then
     exit 0
 fi
 
-## Commit to SVN
-#svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn -m "Deploy version $VERSION"
-#
-## Remove SVN temp dir
-#rm -fR svn
+# Commit to SVN
+svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn -m "Deploy version $VERSION"
+
+# Remove SVN temp dir
+rm -fR svn
