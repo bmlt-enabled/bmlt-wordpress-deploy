@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ -n "$TRAVIS" ]]; then
     SCRIPT_TAG=$TRAVIS_TAG
@@ -19,6 +19,19 @@ fi
 if [[ -z "$WORDPRESS_PASSWORD" ]]; then
     echo "WordPress.org password not set" 1>&2
     exit 1
+fi
+
+if ! command -v svn > /dev/null 2>&1; then
+    echo "svn is not installed. Attempting to install the missing dependency..."
+    apt-get update -y
+    apt-get install -y subversion
+    if [ $? -ne 0 ]; then
+        echo "Failed to install svn. Please install it manually."
+        exit 1
+    fi
+    echo "svn has been successfully installed."
+else
+    echo "svn is installed."
 fi
 
 PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
