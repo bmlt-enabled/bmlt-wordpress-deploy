@@ -133,15 +133,33 @@ if [[ "$SCRIPT_TAG" == *"-"* ]]; then
     exit 0
 fi
 
-
 # Commit trunk (and assets if changed) to SVN
+echo "Committing changes to trunk..."
 svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn -m "Deploy version $VERSION"
 
+if [ $? -ne 0 ]; then
+    echo "Failed to commit to trunk" 1>&2
+    exit 1
+fi
+
+echo "Trunk committed successfully!"
+echo "Waiting for SVN server to synchronize..."
+sleep 3
+
 # Create new version tag from the updated trunk using svn copy
+echo "Creating tag $VERSION from trunk..."
 svn copy "https://plugins.svn.wordpress.org/$PLUGIN/trunk" \
          "https://plugins.svn.wordpress.org/$PLUGIN/tags/$VERSION" \
          --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD \
          -m "Tagging version $VERSION"
+
+if [ $? -ne 0 ]; then
+    echo "Failed to create tag $VERSION" 1>&2
+    exit 1
+fi
+
+echo "Tag $VERSION created successfully!"
+echo "Deployment completed successfully!"
 
 # Remove SVN temp dir
 rm -fR svn
