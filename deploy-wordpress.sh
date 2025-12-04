@@ -124,8 +124,9 @@ cd ../
 rm -fR svn-trunk
 
 # Add new version tag
-mkdir svn/tags/$VERSION
-rsync -r -p $PLUGIN/* svn/tags/$VERSION
+cd svn
+svn copy trunk tags/$VERSION
+cd ..
 
 # Add new files to SVN
 svn stat svn | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
