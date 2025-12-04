@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-if [[ -n "$TRAVIS" ]]; then
-    SCRIPT_TAG=$TRAVIS_TAG
-elif [[ -n "$GITHUB_WORKFLOW" ]]; then
+if [[ -n "$GITHUB_WORKFLOW" ]]; then
     SCRIPT_TAG=${GITHUB_REF##*/}
 else
-    echo "Script is only to be run by Travis CI or GitHub Actions" 1>&2
+    echo "Script is only to be run by GitHub Actions" 1>&2
     exit 1
 fi
 
@@ -60,7 +58,6 @@ if [ $error == 0 ]; then
 fi
 
 # Unzip the built plugin
-
 unzip -q -o "$GITHUB_RELEASE_FILENAME"
 
 rm "$GITHUB_RELEASE_FILENAME"
@@ -88,50 +85,51 @@ elif [ "$PLUGINVERSION" = "$READMEVERSION" ]; then
     echo "Versions match in readme.txt and $MAINFILE. Let's continue..."
 fi
 
-# Checkout the SVN repo
-svn co "http://svn.wp-plugins.org/$PLUGIN" svn
+# Checkout only trunk and assets (much faster than checking out entire repo)
+svn co --depth immediates "https://plugins.svn.wordpress.org/$PLUGIN" svn
+cd svn
+svn up trunk
+svn up assets
 
-# Move out the trunk directory to a temp location
-mv svn/trunk ./svn-trunk
-# Create trunk directory
-mkdir svn/trunk
-# Copy our new version of the plugin into trunk
-rsync -r -p $PLUGIN/* svn/trunk
-
-# Copy all the .svn folders from the checked out copy of trunk to the new trunk.
-# This is necessary as the Travis container runs Subversion 1.6 which has .svn dirs in every sub dir
-cd svn/trunk/
-TARGET=$(pwd)
-cd ../../svn-trunk/
-
-# Find all .svn dirs in sub dirs
-SVN_DIRS=`find . -type d -iname .svn`
-
-for SVN_DIR in $SVN_DIRS; do
-    SOURCE_DIR=${SVN_DIR/.}
-    TARGET_DIR=$TARGET${SOURCE_DIR/.svn}
-    TARGET_SVN_DIR=$TARGET${SVN_DIR/.}
-    if [ -d "$TARGET_DIR" ]; then
-        # Copy the .svn directory to trunk dir
-        cp -r $SVN_DIR $TARGET_SVN_DIR
-    fi
-done
-
-# Back to builds dir
 cd ../
 
-# Remove checked out dir
-rm -fR svn-trunk
+# Copy our new version of the plugin into trunk
+rsync -r -p --delete $PLUGIN/* svn/trunk/
 
-# Add new version tag
+# Handle assets directory if it exists in the plugin
+ASSETS_CHANGED=false
+if [ -d "$PLUGIN/assets" ]; then
+    echo "Assets directory found, checking for changes..."
+
+    # Use rsync with --dry-run and --itemize-changes to detect if there are any differences
+    RSYNC_OUTPUT=$(rsync -r -p --delete --dry-run --itemize-changes $PLUGIN/assets/ svn/assets/)
+
+    if [ -n "$RSYNC_OUTPUT" ]; then
+        echo "Assets have changed, syncing to SVN assets..."
+        ASSETS_CHANGED=true
+        rsync -r -p --delete $PLUGIN/assets/ svn/assets/
+
+        # Add new files to SVN in assets
+        svn stat svn/assets | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
+        # Remove deleted files from SVN in assets
+        svn stat svn/assets | grep '^!' | awk '{print $2}' | xargs -I x svn rm --force x@
+    else
+        echo "No changes detected in assets directory, skipping sync..."
+    fi
+else
+    echo "No assets directory found in plugin, skipping assets sync..."
+fi
+
+# Add new files to SVN in trunk
+svn stat svn/trunk | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
+# Remove deleted files from SVN in trunk
+svn stat svn/trunk | grep '^!' | awk '{print $2}' | xargs -I x svn rm --force x@
+
+# Create new version tag from trunk using svn copy
 cd svn
 svn copy trunk tags/$VERSION
-cd ..
+cd ../
 
-# Add new files to SVN
-svn stat svn | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
-# Remove deleted files from SVN
-svn stat svn | grep '^!' | awk '{print $2}' | xargs -I x svn rm --force x@
 svn stat svn
 
 # this is so we can test a deploy without the final svn commit, if theres a hyphen in tag but doesn't contain beta in it we will get here.
