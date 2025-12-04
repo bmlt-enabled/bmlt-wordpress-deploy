@@ -125,11 +125,6 @@ svn stat svn/trunk | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
 # Remove deleted files from SVN in trunk
 svn stat svn/trunk | grep '^!' | awk '{print $2}' | xargs -I x svn rm --force x@
 
-# Create new version tag from trunk using svn copy
-cd svn
-svn copy trunk tags/$VERSION
-cd ../
-
 svn stat svn
 
 # this is so we can test a deploy without the final svn commit, if theres a hyphen in tag but doesn't contain beta in it we will get here.
@@ -138,8 +133,15 @@ if [[ "$SCRIPT_TAG" == *"-"* ]]; then
     exit 0
 fi
 
-# Commit to SVN
+
+# Commit trunk (and assets if changed) to SVN
 svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn -m "Deploy version $VERSION"
+
+# Create new version tag from the updated trunk using svn copy
+svn copy "https://plugins.svn.wordpress.org/$PLUGIN/trunk" \
+         "https://plugins.svn.wordpress.org/$PLUGIN/tags/$VERSION" \
+         --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD \
+         -m "Tagging version $VERSION"
 
 # Remove SVN temp dir
 rm -fR svn
