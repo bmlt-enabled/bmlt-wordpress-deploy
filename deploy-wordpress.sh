@@ -85,25 +85,18 @@ elif [ "$PLUGINVERSION" = "$READMEVERSION" ]; then
     echo "Versions match in readme.txt and $MAINFILE. Let's continue..."
 fi
 
-# Checkout only trunk (much faster than checking out entire repo)
-svn co --depth immediates "https://plugins.svn.wordpress.org/$PLUGIN" svn
-cd svn
-svn up trunk
-
-# Revert any local changes to ensure clean state before rsync
-svn revert -R trunk
-
-cd ../
+# Checkout trunk to get current state from WordPress.org
+svn co "https://plugins.svn.wordpress.org/$PLUGIN/trunk" svn/trunk
 
 # Copy our new version of the plugin into trunk
-rsync -r -p --delete $PLUGIN/* svn/trunk/
+rsync -r -p --delete $PLUGIN/ svn/trunk/
 
 # Add new files to SVN in trunk
 svn stat svn/trunk | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
 # Remove deleted files from SVN in trunk
 svn stat svn/trunk | grep '^!' | awk '{print $2}' | xargs -I x svn rm --force x@
 
-svn stat svn
+svn stat svn/trunk
 
 # this is so we can test a deploy without the final svn commit, if theres a hyphen in tag but doesn't contain beta in it we will get here.
 if [[ "$SCRIPT_TAG" == *"-"* ]]; then
@@ -113,7 +106,7 @@ fi
 
 # Commit trunk to SVN
 echo "Committing changes to trunk..."
-svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn -m "Deploy version $VERSION"
+svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn/trunk -m "Deploy version $VERSION"
 
 if [ $? -ne 0 ]; then
     echo "Failed to commit to trunk" 1>&2
