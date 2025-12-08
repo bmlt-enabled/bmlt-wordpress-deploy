@@ -88,8 +88,8 @@ fi
 # Checkout trunk to get current state from WordPress.org
 svn co "https://plugins.svn.wordpress.org/$PLUGIN/trunk" svn/trunk
 
-# Copy our new version of the plugin into trunk
-rsync -r -p --delete $PLUGIN/ svn/trunk/
+# Copy our new version of the plugin into trunk (exclude .svn to preserve working copy)
+rsync -r -p --delete --exclude='.svn' $PLUGIN/ svn/trunk/
 
 # Add new files to SVN in trunk
 svn stat svn/trunk | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
