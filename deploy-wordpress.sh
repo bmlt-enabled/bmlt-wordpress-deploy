@@ -91,6 +91,10 @@ cd svn
 svn up trunk
 svn up assets
 
+# Revert any local changes to ensure clean state before rsync
+svn revert -R trunk
+svn revert -R assets
+
 cd ../
 
 # Copy our new version of the plugin into trunk
