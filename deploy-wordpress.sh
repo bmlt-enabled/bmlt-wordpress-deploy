@@ -85,44 +85,18 @@ elif [ "$PLUGINVERSION" = "$READMEVERSION" ]; then
     echo "Versions match in readme.txt and $MAINFILE. Let's continue..."
 fi
 
-# Checkout only trunk and assets (much faster than checking out entire repo)
+# Checkout only trunk (much faster than checking out entire repo)
 svn co --depth immediates "https://plugins.svn.wordpress.org/$PLUGIN" svn
 cd svn
 svn up trunk
-svn up assets
 
 # Revert any local changes to ensure clean state before rsync
 svn revert -R trunk
-svn revert -R assets
 
 cd ../
 
 # Copy our new version of the plugin into trunk
 rsync -r -p --delete $PLUGIN/* svn/trunk/
-
-# Handle assets directory if it exists in the plugin
-ASSETS_CHANGED=false
-if [ -d "$PLUGIN/assets" ]; then
-    echo "Assets directory found, checking for changes..."
-
-    # Use rsync with --dry-run and --itemize-changes to detect if there are any differences
-    RSYNC_OUTPUT=$(rsync -r -p --delete --dry-run --itemize-changes $PLUGIN/assets/ svn/assets/)
-
-    if [ -n "$RSYNC_OUTPUT" ]; then
-        echo "Assets have changed, syncing to SVN assets..."
-        ASSETS_CHANGED=true
-        rsync -r -p --delete $PLUGIN/assets/ svn/assets/
-
-        # Add new files to SVN in assets
-        svn stat svn/assets | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
-        # Remove deleted files from SVN in assets
-        svn stat svn/assets | grep '^!' | awk '{print $2}' | xargs -I x svn rm --force x@
-    else
-        echo "No changes detected in assets directory, skipping sync..."
-    fi
-else
-    echo "No assets directory found in plugin, skipping assets sync..."
-fi
 
 # Add new files to SVN in trunk
 svn stat svn/trunk | grep '^?' | awk '{print $2}' | xargs -I x svn add x@
@@ -137,7 +111,7 @@ if [[ "$SCRIPT_TAG" == *"-"* ]]; then
     exit 0
 fi
 
-# Commit trunk (and assets if changed) to SVN
+# Commit trunk to SVN
 echo "Committing changes to trunk..."
 svn ci --no-auth-cache --username $WORDPRESS_USERNAME --password $WORDPRESS_PASSWORD svn -m "Deploy version $VERSION"
 
